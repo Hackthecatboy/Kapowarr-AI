@@ -1,6 +1,8 @@
 """User-requested filename suggestions; AI never writes library identities."""
 
 import json
+import re
+from decimal import Decimal
 from time import time
 from typing import Any, Dict
 
@@ -10,6 +12,14 @@ from backend.features.ai_provider import request_completion
 from backend.implementations.matching import match_title
 from backend.internals.db_models import PackInboxDB
 from backend.internals.settings import Settings
+
+
+def _issue_number(value: str) -> str:
+    """Normalize numeric padding without collapsing suffixes or special issues."""
+    value = value.strip().lstrip('#').strip().casefold()
+    if re.fullmatch(r'-?\d+(?:\.\d+)?', value):
+        return str(Decimal(value).normalize())
+    return value
 
 
 def suggest_match(token: object) -> Dict[str, Any]:
@@ -65,18 +75,21 @@ def suggest_match(token: object) -> Dict[str, Any]:
             if not (match_title(title, volume['title'])
                     or (volume['alt_title'] and match_title(title, volume['alt_title']))):
                 continue
-            if year is not None and volume['year'] != year:
-                continue
             options = pack_inbox.match_options(token, volume['id'])
             # Use stored display numbers, not model-generated database IDs.
             issues = PackInboxDB.ai_issue_numbers(volume['id'])
             selected = []
             for number in numbers:
-                matches = [i['id'] for i in issues if i['issue_number'].casefold() == number.strip().casefold()]
+                matches = [i['id'] for i in issues if _issue_number(i['issue_number']) == _issue_number(number)]
                 if len(matches) != 1:
                     selected = []
                     break
                 selected.append(matches[0])
+            years = {volume['year']} | {
+                int(i['date'][:4]) for i in issues
+                if i['id'] in selected and i['date'] and i['date'][:4].isdigit()}
+            if year is not None and year not in years:
+                continue
             if selected:
                 candidates.append(dict(volume_id=volume['id'], title=volume['title'], year=volume['year'],
                                        issue_ids=sorted(set(selected)), numbers=numbers,
@@ -85,4 +98,5 @@ def suggest_match(token: object) -> Dict[str, Any]:
                 break
     return dict(candidates=candidates, message=(
         'Review the suggested series and issues before linking.' if candidates else
-        'No verified library match for the AI suggestion. Use Find / Add Series to choose manually.'))
+        f'AI read: {title or "unknown series"}, year {year or "unknown"}, issues {", ".join(numbers) or "unknown"}. '
+        'No verified library match. Use Find / Add Series to choose manually.'))

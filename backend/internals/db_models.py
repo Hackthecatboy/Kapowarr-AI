@@ -491,7 +491,7 @@ class PackInboxDB:
     def ai_issue_numbers(volume_id: int) -> List[Row]:
         """Read exact catalogue numbers for validating AI suggestions."""
         return get_db().execute(
-            'SELECT id,issue_number FROM issues WHERE volume_id=?', (volume_id,)
+            'SELECT id,issue_number,date FROM issues WHERE volume_id=?', (volume_id,)
         ).fetchall()
 
     @staticmethod

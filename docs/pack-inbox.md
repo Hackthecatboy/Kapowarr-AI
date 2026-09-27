@@ -225,8 +225,9 @@ paths or the library catalogue. Configure and save [AI Provider](ai-provider.md)
 settings first. Each click makes one request and may consume provider quota.
 
 AI suggests a title, year and issue numbers. Kapowarr resolves those against
-existing library titles/aliases and exact catalogue issue numbers. A supplied
-year must match the series year. Unknown issues, ambiguous numbering, unnumbered
+existing library titles/aliases and catalogue issue numbers. Numeric padding
+such as `#030` matches `30`; special suffixes remain distinct. A supplied year
+must match the series start year or a selected issue's publication year. Unknown issues, ambiguous numbering, unnumbered
 books and mismatched titles may produce no suggestion; **Find / Add Series** stays
 available for those cases. Up to ten verified candidate series can be offered.
 

@@ -431,6 +431,27 @@ class PackInbox(unittest.TestCase):
             with self.assertRaises(InvalidKeyValue):
                 suggest_match(token)
 
+    def test_ai_matches_padded_number_and_issue_publication_year(self):
+        from backend.features.ai_matching import suggest_match
+        self.db.execute("UPDATE volumes SET title='The Amazing Spider-Man',year=2015 WHERE id=1")
+        self.db.execute("UPDATE issues SET issue_number='30',calculated_issue_number=30,date='2017-08-01' WHERE id=1")
+        self.db.commit()
+        self.comic('05.1. Amazing Spider-Man #030 (2017).cbr')
+        token = self.scan()[0]['token']
+        settings = SimpleNamespace(sv=SimpleNamespace(
+            pack_inbox_folder=str(self.inbox), ai_base_url='http://model/v1',
+            ai_api_key='', ai_model='fixture', ai_timeout=30))
+        with patch('backend.features.ai_matching.Settings', return_value=settings), patch(
+                'backend.features.ai_matching.request_completion') as request:
+            request.return_value = {'success': True, 'content': '{"series":"Amazing Spider-Man","year":2017,"issue_numbers":["#030"]}'}
+            self.assertEqual(suggest_match(token)['candidates'][0]['issue_ids'], [1])
+            self.db.execute("UPDATE issues SET issue_number='30AU' WHERE id=1")
+            self.db.commit()
+            self.assertEqual(suggest_match(token)['candidates'], [])
+            self.db.execute("UPDATE issues SET issue_number='30',date='2016-08-01' WHERE id=1")
+            self.db.commit()
+            self.assertEqual(suggest_match(token)['candidates'], [])
+
     def test_ai_response_cannot_match_changed_source(self):
         from backend.features.ai_matching import suggest_match
         source = self.comic('Unknown 001 (2026).cbz')
