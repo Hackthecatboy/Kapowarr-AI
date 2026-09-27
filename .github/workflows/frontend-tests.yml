@@ -2,7 +2,7 @@ name: Frontend Tests
 
 on:
   push:
-    branches: [development, feature/sonarr-integrations]
+    branches: [main, feature/comicarr-ai]
     paths:
       - 'frontend/**'
       - 'tests/frontend/**'

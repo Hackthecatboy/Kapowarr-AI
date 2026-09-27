@@ -81,9 +81,9 @@ Kapowarr's import pipeline.
 
 ## Fork status
 
-The separate local repository is `/home/andrew/Kapowarr-AI`, branch
-`feature/comicarr-ai`. Its `kapowarr` remote points to the existing parent fork.
-No new GitHub repository or container image has been published. Before publishing,
-configure a dedicated Kapowarr-AI remote and review inherited workflows: container
-publishing currently targets the parent's `ghcr.io/hackthecatboy/kapowarr` image.
-Use a separate image, container configuration and test database for this fork.
+The separate local repository is `/home/andrew/Kapowarr-AI`, publishing from `main`.
+The `kapowarr` remote tracks the parent fork; `origin` targets
+`git@github.com:Hackthecatboy/Kapowarr-AI.git`. Container publishing targets
+`ghcr.io/hackthecatboy/kapowarr-ai:dev` and immutable commit tags. Publication
+requires the GitHub repository to exist and a successful Actions run.
+See [Synology setup](synology-ghcr.md) for isolated directories and port 5658.

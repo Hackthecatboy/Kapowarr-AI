@@ -1,4 +1,4 @@
-> **Unofficial personal development fork**
+> **Kapowarr-AI — unofficial development fork**
 >
 > This repository is a personal development and testing fork of
 > [Casvt/Kapowarr](https://github.com/Casvt/Kapowarr). It is not an official
@@ -6,7 +6,10 @@
 > maintainer. Experimental changes and public GHCR images are provided for
 > personal testing, with no promise of stability or support.
 >
-> Development takes place on `feature/sonarr-integrations`. See the
+> Based on [Hackthecatboy/Kapowarr](https://github.com/Hackthecatboy/Kapowarr),
+> preserving its importing and file naming. Comicarr AI features are inventoried
+> but not implemented yet; see the [AI port plan](docs/ai-feature-inventory.md).
+> Development builds publish from `main` to `ghcr.io/hackthecatboy/kapowarr-ai:dev`. See the
 > [roadmap](ROADMAP.md), [fork plan](FORK_PLAN.md), and [Synology test setup](docs/synology-ghcr.md).
 > Please keep fork-specific issues in this repository rather than directing
 > them to upstream support. The original project information follows below.

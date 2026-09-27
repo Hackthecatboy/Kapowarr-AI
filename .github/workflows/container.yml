@@ -2,7 +2,8 @@ name: Build Synology image
 
 on:
   push:
-    branches: [feature/sonarr-integrations]
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,7 +14,7 @@ concurrency:
 
 jobs:
   image:
-    if: github.repository == 'Hackthecatboy/Kapowarr'
+    if: github.repository == 'Hackthecatboy/Kapowarr-AI' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     permissions:
@@ -31,6 +32,15 @@ jobs:
         run: |
           mkdir -p db
           python -m unittest discover -s tests -p '*.py'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tests/frontend/package-lock.json
+      - name: Frontend regression tests
+        run: |
+          npm --prefix tests/frontend ci --ignore-scripts
+          npm --prefix tests/frontend test
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
@@ -45,11 +55,11 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/hackthecatboy/kapowarr:dev
-            ghcr.io/hackthecatboy/kapowarr:sha-${{ github.sha }}
+            ghcr.io/hackthecatboy/kapowarr-ai:dev
+            ghcr.io/hackthecatboy/kapowarr-ai:sha-${{ github.sha }}
           labels: |
-            org.opencontainers.image.source=https://github.com/Hackthecatboy/Kapowarr
-            org.opencontainers.image.description=Unofficial Kapowarr fork for personal development and testing; not endorsed by upstream.
+            org.opencontainers.image.source=https://github.com/Hackthecatboy/Kapowarr-AI
+            org.opencontainers.image.description=Unofficial Kapowarr-AI development build; not endorsed by upstream.
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.licenses=GPL-3.0-only
           cache-from: type=gha
