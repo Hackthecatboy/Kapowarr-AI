@@ -488,6 +488,13 @@ class PackInboxDB:
     """
 
     @staticmethod
+    def ai_issue_numbers(volume_id: int) -> List[Row]:
+        """Read exact catalogue numbers for validating AI suggestions."""
+        return get_db().execute(
+            'SELECT id,issue_number FROM issues WHERE volume_id=?', (volume_id,)
+        ).fetchall()
+
+    @staticmethod
     def reset_interrupted(token: str) -> None:
         """Return a validated interrupted copy to manual import selection."""
         get_db().execute(

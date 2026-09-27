@@ -446,3 +446,26 @@ test('interrupted recovery requires confirmation and refreshes import selection'
     assert.equal(el('.inbox-recover'), null);
     assert.equal(el('#inbox-results input').value, 'a');
 });
+
+test('AI suggestions require confirmation before a verified match is linked', async t => {
+    const { el, state } = await page(t, {
+        items: [{status: 'review', relative_path: 'Mystery.cbz', token: 'a', series_query: 'Mystery'}],
+        respond: path => path === '/pack-inbox/ai-match'
+            ? {message: 'Review suggestion', candidates: [{title: 'Alpha', year: 2026, numbers: ['1'], volume_id: 1, issue_ids: [2]}]}
+            : path === '/pack-inbox/match' ? {folder: '/inbox', items: []} : undefined
+    });
+    el('.inbox-ai-suggest').click();
+    assert.equal(state.calls.length, 0);
+    state.confirm = true;
+    el('.inbox-ai-suggest').click();
+    await tick();
+    assert.deepEqual(state.calls, [{path: '/pack-inbox/ai-match', data: {token: 'a'}}]);
+    state.confirm = false;
+    el('.inbox-ai-result button').click();
+    assert.equal(state.calls.length, 1);
+    state.confirm = true;
+    el('.inbox-ai-result button').click();
+    await tick();
+    assert.equal(state.calls[1].path, '/pack-inbox/match');
+    assert.deepEqual(state.calls[1].data.issue_ids, [2]);
+});

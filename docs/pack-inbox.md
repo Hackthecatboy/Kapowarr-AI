@@ -217,6 +217,25 @@ A missing match can also mean missing issue metadata or a title/year mismatch in
 an existing series. Search shows already-added series; refresh that volume's
 metadata instead of adding a duplicate. No series is added automatically.
 
+## AI matching suggestions (Kapowarr-AI)
+
+For a review row, select **Suggest Match with AI** and confirm sending its filename
+to your saved AI provider. Only the filename is sent, not file contents, folder
+paths or the library catalogue. Configure and save [AI Provider](ai-provider.md)
+settings first. Each click makes one request and may consume provider quota.
+
+AI suggests a title, year and issue numbers. Kapowarr resolves those against
+existing library titles/aliases and exact catalogue issue numbers. A supplied
+year must match the series year. Unknown issues, ambiguous numbering, unnumbered
+books and mismatched titles may produce no suggestion; **Find / Add Series** stays
+available for those cases. Up to ten verified candidate series can be offered.
+
+Review the series/year and issues, then click **Link** and confirm. This uses the
+same saved matching rules as the picker, including related-file refresh and owned
+issue exclusion. Nothing is imported automatically. AI can suggest the wrong
+edition even when it exists in the library, so inspect its proposal before linking.
+Changed sources are rejected and interrupted imports remain outside this action.
+
 ## Clean imported managed-pack files
 
 After a successful import from a Kapowarr-downloaded pack, its individual extracted

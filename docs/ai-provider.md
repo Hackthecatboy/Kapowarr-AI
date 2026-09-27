@@ -24,8 +24,9 @@ keyless endpoint. Re-enter the key before testing a different URL: the test will
 not forward a saved key to a changed endpoint. Credentials are stored in the
 application database, so protect its backups like other application credentials.
 
-This slice provides settings and testing only. It does not enable AI matching,
-chat, automatic downloads or metadata changes. Kapowarr's existing import and
+Pack Inbox now offers explicit [AI matching suggestions](pack-inbox.md#ai-matching-suggestions-kapowarr-ai).
+Saving these settings does not run AI automatically. Chat, automatic downloads
+and metadata changes remain outside this slice. Kapowarr's existing import and
 naming behavior remains in use.
 
 ## Isolated NAS check

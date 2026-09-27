@@ -410,6 +410,43 @@ class PackInbox(unittest.TestCase):
         self.db.commit()
         self.assertEqual(self.scan()[0]['status'],'importing')
 
+    def test_ai_suggestion_requires_explicit_link_and_valid_catalogue(self):
+        from backend.features.ai_matching import suggest_match
+        self.comic('Unknown 001 (2026).cbz')
+        token = self.scan()[0]['token']
+        settings = SimpleNamespace(sv=SimpleNamespace(
+            pack_inbox_folder=str(self.inbox), ai_base_url='http://model/v1',
+            ai_api_key='', ai_model='fixture', ai_timeout=30))
+        with patch('backend.features.ai_matching.Settings', return_value=settings), patch(
+                'backend.features.ai_matching.request_completion') as request:
+            request.return_value = {'success': True, 'content': '{"series":"Alpha Comics","year":2026,"issue_numbers":["1"]}'}
+            result = suggest_match(token)
+            self.assertEqual(result['candidates'][0]['issue_ids'], [1])
+            self.assertEqual(pack_inbox.listing()['items'][0]['status'], 'review')
+            self.assertEqual(self.db.execute('SELECT count(*) FROM files').fetchone()[0], 0)
+            self.assertNotIn(str(self.inbox), str(request.call_args))
+            request.return_value['content'] = '{"series":"Alpha Comics","year":2026,"issue_numbers":["999"]}'
+            self.assertEqual(suggest_match(token)['candidates'], [])
+            request.return_value['content'] = '{"series":"Alpha Comics","year":2026,"issue_numbers":[true]}'
+            with self.assertRaises(InvalidKeyValue):
+                suggest_match(token)
+
+    def test_ai_response_cannot_match_changed_source(self):
+        from backend.features.ai_matching import suggest_match
+        source = self.comic('Unknown 001 (2026).cbz')
+        token = self.scan()[0]['token']
+        settings = SimpleNamespace(sv=SimpleNamespace(
+            pack_inbox_folder=str(self.inbox), ai_base_url='http://model/v1',
+            ai_api_key='', ai_model='fixture', ai_timeout=30))
+        def response(*args):
+            self.assertFalse(self.db.in_transaction)
+            source.write_bytes(b'changed')
+            return {'success': True, 'content': '{"series":"Alpha Comics","year":2026,"issue_numbers":["1"]}'}
+        with patch('backend.features.ai_matching.Settings', return_value=settings), patch(
+                'backend.features.ai_matching.request_completion', side_effect=response):
+            with self.assertRaises(InvalidKeyValue):
+                suggest_match(token)
+
     def interrupted_copy(self):
         source = self.comic('Alpha Comics 001 (2026).cbz')
         token = self.scan()[0]['token']
@@ -555,7 +592,7 @@ class PackInbox(unittest.TestCase):
         settings=self.start_patch('frontend.api.Settings')
         settings.return_value.sv.api_key='fixture-key'
         self.start_patch('frontend.api.StartTypeHandlers.diffuse_timer')
-        for method,path in [('GET','/pack-inbox'),('POST','/pack-inbox/scan'),('POST','/pack-inbox/import'),('POST','/pack-inbox/recover')]:
+        for method,path in [('GET','/pack-inbox'),('POST','/pack-inbox/scan'),('POST','/pack-inbox/import'),('POST','/pack-inbox/recover'),('POST','/pack-inbox/ai-match')]:
             self.assertEqual(client.open('/api'+path,method=method,json={'folder':str(self.inbox),'items':[]}).status_code,401)
         self.assertEqual(client.post('/api/pack-inbox/scan?api_key=fixture-key',json={'folder':str(self.inbox)}).status_code,200)
 

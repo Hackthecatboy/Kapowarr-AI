@@ -893,6 +893,9 @@ def api_pack_inbox_action(action: str):
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
         raise InvalidKeyValue('body', 'Expected an object')
+    if action == 'ai-match':
+        from backend.features.ai_matching import suggest_match
+        return return_api(suggest_match(data.get('token')))
     if action == 'match-options':
         return return_api(pack_inbox.match_options(data.get('token'), data.get('volume_id')))
     if action == 'match':

@@ -174,6 +174,46 @@ usingApiKey().then(apiKey => {
             file.textContent = item.relative_path.split('/').pop();
             file.title = item.relative_path;
             row.querySelector('.inbox-message').textContent = `${item.status}: ${item.message}`;
+            const ai = row.querySelector('.inbox-ai-suggest');
+            let aiPending = false;
+            if (item.status === 'review' && item.series_query) {
+                ai.onclick = async () => {
+                    if (busy || aiPending) return;
+                    if (!confirm('Send this filename to your configured AI provider for a suggestion? No file contents are sent.')) return;
+                    aiPending = true;
+                    ai.disabled = true;
+                    const output = row.querySelector('.inbox-ai-result');
+                    output.textContent = 'Asking AI for a suggestion…';
+                    try {
+                        const suggestion = await matchPost('ai-match', {token: item.token});
+                        if (!row.isConnected) return;
+                        output.textContent = suggestion.message;
+                        for (const candidate of suggestion.candidates) {
+                            const button = document.createElement('button');
+                            button.type = 'button';
+                            button.textContent = `Link ${candidate.title} (${candidate.year}) — #${candidate.numbers.join(', #')}${candidate.owned ? ' — already owned' : ''}`;
+                            button.onclick = async () => {
+                                if (busy || button.disabled) return;
+                                if (!confirm(`Link this file to ${candidate.title} (${candidate.year}), issues ${candidate.numbers.join(', ')}? Importing remains a separate step.`)) return;
+                                button.disabled = true;
+                                try {
+                                    const result = await matchPost('match', {token: item.token, volume_id: candidate.volume_id, issue_ids: candidate.issue_ids});
+                                    if (row.isConnected) render(result);
+                                } catch (_) {
+                                    output.textContent = 'Could not link the suggestion. Refresh results and review the file again.';
+                                    button.disabled = false;
+                                }
+                            };
+                            output.appendChild(button);
+                        }
+                    } catch (error) {
+                        if (!row.isConnected) return;
+                        let message = 'AI suggestion failed. Try again or use Find / Add Series.';
+                        try { const body = await error.json(); if (body.error === 'InvalidKeyValue') message = body.result.value; } catch (_) {}
+                        output.textContent = message;
+                    } finally { aiPending = false; ai.disabled = false; }
+                };
+            } else row.querySelector('.inbox-ai').remove();
             const recover = row.querySelector('.inbox-recover');
             if (['held', 'importing'].includes(item.status)) {
                 recover.onclick = () => {

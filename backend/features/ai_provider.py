@@ -2,7 +2,7 @@
 
 import json
 import socket
-from typing import Any, Dict
+from typing import Any, Dict, List
 from urllib.parse import urlsplit
 
 from requests import RequestException, Session
@@ -87,6 +87,15 @@ def test_connection(data: object) -> Dict[str, Any]:
         if url != saved.ai_base_url:
             raise InvalidKeyValue('ai_api_key', 'Enter the key again when testing a different endpoint')
         key = saved.ai_api_key
+    result = request_completion(url, key, model, timeout,
+                                [{'role': 'user', 'content': 'Reply with OK.'}], 32)
+    result.pop('content', None)
+    return result
+
+
+def request_completion(url: str, key: str, model: str, timeout: int,
+                       messages: List[Dict[str, str]], max_tokens: int) -> Dict[str, Any]:
+    """Make one bounded provider request, without retries or database writes."""
     headers = {'Accept': 'application/json'}
     if key:
         headers['Authorization'] = 'Bearer ' + key
@@ -95,8 +104,8 @@ def test_connection(data: object) -> Dict[str, Any]:
             session.trust_env = False
             with session.post(
                 url + '/chat/completions', headers=headers,
-                json={'model': model, 'messages': [{'role': 'user', 'content': 'Reply with OK.'}],
-                      'max_tokens': 32, 'stream': False},
+                json={'model': model, 'messages': messages,
+                      'max_tokens': max_tokens, 'stream': False},
                 timeout=(5, timeout), allow_redirects=False, stream=True
             ) as response:
                 if response.status_code != 200:
@@ -119,4 +128,4 @@ def test_connection(data: object) -> Dict[str, Any]:
         return {'success': False, 'message': connection_error(error, timeout)}
     except (ValueError, KeyError, IndexError, TypeError):
         return {'success': False, 'message': 'Provider did not return a valid chat completion.'}
-    return {'success': True, 'message': 'Connection successful; the model returned a reply.'}
+    return {'success': True, 'message': 'Connection successful; the model returned a reply.', 'content': content}
