@@ -7,6 +7,13 @@ comic-appropriate automation and recovery built on Kapowarr v1.3.2. This roadmap
 tracks unfinished work and outstanding validation. Completed implementation
 sections have been removed; behavior and setup belong in the linked guides.
 
+## Kapowarr-AI
+
+This local fork preserves Kapowarr importing and naming while adapting Comicarr AI
+features. See the [feature inventory and port order](docs/ai-feature-inventory.md).
+The inventory is complete; implementation and a dedicated GitHub/image setup are
+pending. Parent-fork validation and development items remain below.
+
 ## Live validation still needed
 
 Use the isolated Synology development deployment, not production data. Local
