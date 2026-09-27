@@ -179,7 +179,6 @@ usingApiKey().then(apiKey => {
             if (item.status === 'review' && item.series_query) {
                 ai.onclick = async () => {
                     if (busy || aiPending) return;
-                    if (!confirm('Send this filename to your configured AI provider for a suggestion? No file contents are sent.')) return;
                     aiPending = true;
                     ai.disabled = true;
                     const output = row.querySelector('.inbox-ai-result');

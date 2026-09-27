@@ -447,7 +447,7 @@ test('interrupted recovery requires confirmation and refreshes import selection'
     assert.equal(el('#inbox-results input').value, 'a');
 });
 
-test('AI suggestions require confirmation before a verified match is linked', async t => {
+test('AI suggestions start directly but linking still requires confirmation', async t => {
     const { el, state } = await page(t, {
         items: [{status: 'review', relative_path: 'Mystery.cbz', token: 'a', series_query: 'Mystery'}],
         respond: path => path === '/pack-inbox/ai-match'
@@ -455,8 +455,7 @@ test('AI suggestions require confirmation before a verified match is linked', as
             : path === '/pack-inbox/match' ? {folder: '/inbox', items: []} : undefined
     });
     el('.inbox-ai-suggest').click();
-    assert.equal(state.calls.length, 0);
-    state.confirm = true;
+    // A second click while the request is pending must not duplicate it.
     el('.inbox-ai-suggest').click();
     await tick();
     assert.deepEqual(state.calls, [{path: '/pack-inbox/ai-match', data: {token: 'a'}}]);

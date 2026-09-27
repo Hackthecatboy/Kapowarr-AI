@@ -219,8 +219,8 @@ metadata instead of adding a duplicate. No series is added automatically.
 
 ## AI matching suggestions (Kapowarr-AI)
 
-For a review row, select **Suggest Match with AI** and confirm sending its filename
-to your saved AI provider. Only the filename is sent, not file contents, folder
+For a review row, select **Suggest Match with AI** to send its filename directly
+to your saved AI provider, without a repeated confirmation popup. Only the filename is sent, not file contents, folder
 paths or the library catalogue. Configure and save [AI Provider](ai-provider.md)
 settings first. Each click makes one request and may consume provider quota.
 
