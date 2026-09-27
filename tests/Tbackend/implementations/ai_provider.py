@@ -1,16 +1,19 @@
 """AI provider settings and bounded connection tests without network access."""
 import json
 import sqlite3
+import socket
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
 
 from flask import Flask
 from requests import Timeout
+from requests.exceptions import ConnectTimeout, ReadTimeout, SSLError, ConnectionError
+from urllib3.exceptions import ReadTimeoutError
 
 from backend.base.custom_exceptions import InvalidKeyValue
 from backend.base.definitions import Constants
-from backend.features.ai_provider import test_connection, validate_setting
+from backend.features.ai_provider import test_connection, validate_setting, connection_error
 from backend.internals.settings import Settings, SettingsValues
 from frontend.api import api
 
@@ -54,6 +57,20 @@ class AIProvider(unittest.TestCase):
         result = test_connection({})
         self.assertFalse(result['success'])
         self.assertNotIn('secret', result['message'])
+
+    def test_transport_diagnostics_do_not_echo_sensitive_exception_text(self):
+        for error, expected in (
+            (SSLError('secret'), 'TLS'),
+            (ConnectTimeout('secret'), 'before reaching'),
+            (ReadTimeout('secret'), '30 seconds'),
+            (ConnectionError(ReadTimeoutError(None, 'secret', 'secret')), '30 seconds'),
+            (ConnectionError(socket.gaierror('secret')), 'DNS'),
+            (ConnectionError(ConnectionRefusedError('secret')), 'refused'),
+            (ConnectionError('secret'), 'interrupted'),
+        ):
+            message = connection_error(error, 30)
+            self.assertIn(expected, message)
+            self.assertNotIn('secret', message)
 
     def test_invalid_and_oversized_completion(self):
         for body in (b'{}', b'[]', b'not json', b'x' * 65537,

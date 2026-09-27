@@ -1,10 +1,13 @@
 """Explicit connection testing for OpenAI-compatible AI providers."""
 
 import json
+import socket
 from typing import Any, Dict
 from urllib.parse import urlsplit
 
 from requests import RequestException, Session
+from requests.exceptions import ConnectTimeout, ReadTimeout, SSLError, Timeout
+from urllib3.exceptions import ReadTimeoutError
 
 from backend.base.custom_exceptions import InvalidKeyValue
 from backend.base.definitions import Constants
@@ -32,6 +35,39 @@ def validate_setting(key: str, value: Any) -> Any:
             raise InvalidKeyValue(key, 'Use an HTTP(S) API base URL without credentials, query or fragment')
         value = value.rstrip('/')
     return value
+
+
+def connection_error(error: RequestException, timeout: int) -> str:
+    """Describe transport failures without including URLs, headers or bodies."""
+    pending = [error]
+    seen = set()
+    causes = []
+    while pending and len(seen) < 32:
+        cause = pending.pop()
+        if id(cause) in seen:
+            continue
+        seen.add(id(cause))
+        causes.append(cause)
+        pending.extend(item for item in (
+            cause.__cause__, cause.__context__, *cause.args
+        ) if isinstance(item, BaseException))
+        reason = getattr(cause, 'reason', None)
+        if isinstance(reason, BaseException):
+            pending.append(reason)
+    if any(isinstance(cause, SSLError) for cause in causes):
+        return 'TLS verification or handshake failed. Check the provider certificate and the NAS clock.'
+    if any(isinstance(cause, ConnectTimeout) for cause in causes):
+        return 'Connection timed out before reaching the provider (5 seconds). Check NAS routing and firewall access.'
+    if any(isinstance(cause, (ReadTimeout, ReadTimeoutError)) for cause in causes):
+        return ('The provider did not finish responding within the read timeout ('
+                + str(timeout) + ' seconds). Try a longer timeout and check whether the model is loading or busy.')
+    if any(isinstance(cause, socket.gaierror) for cause in causes):
+        return 'DNS lookup failed from Kapowarr. Check the hostname and the container DNS configuration.'
+    if any(isinstance(cause, ConnectionRefusedError) for cause in causes):
+        return 'The provider refused the connection. Check its port and whether the service is running.'
+    if isinstance(error, Timeout):
+        return 'The provider request timed out. Check provider availability and try a longer timeout.'
+    return 'Connection was interrupted or could not be established. Check provider logs and network access from the NAS container.'
 
 
 def test_connection(data: object) -> Dict[str, Any]:
@@ -79,8 +115,8 @@ def test_connection(data: object) -> Dict[str, Any]:
                 content = result['choices'][0]['message']['content']
                 if not isinstance(content, str) or not content.strip():
                     raise ValueError('Missing reply')
-    except RequestException:
-        return {'success': False, 'message': 'Connection failed or timed out. Check the endpoint, TLS and network access from Kapowarr.'}
+    except RequestException as error:
+        return {'success': False, 'message': connection_error(error, timeout)}
     except (ValueError, KeyError, IndexError, TypeError):
         return {'success': False, 'message': 'Provider did not return a valid chat completion.'}
     return {'success': True, 'message': 'Connection successful; the model returned a reply.'}

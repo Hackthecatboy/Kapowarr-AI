@@ -11,6 +11,11 @@ It sends a small chat-completion prompt and verifies that the model returns a
 nonempty text reply. This can consume provider quota. No library files or metadata
 are sent. Authentication, rate-limit, endpoint and malformed-response failures
 are reported without displaying provider response bodies or credentials.
+Transport errors distinguish TLS, DNS, refused connections, connection timeouts
+and response timeouts. A response timeout may mean the model is loading or busy;
+try increasing the timeout up to 120 seconds. Connection establishment has a
+separate 5-second timeout. Reachability from another machine does not establish
+NAS connectivity or a successful authenticated model response.
 Redirects are not followed; enter the final API URL.
 
 **Save** persists the settings. Saved keys are masked in API responses and the
