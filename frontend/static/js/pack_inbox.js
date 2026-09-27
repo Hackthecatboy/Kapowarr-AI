@@ -186,6 +186,7 @@ usingApiKey().then(apiKey => {
                     try {
                         const suggestion = await matchPost('ai-match', {token: item.token});
                         if (!row.isConnected) return;
+                        if (!suggestion || !Array.isArray(suggestion.candidates)) throw new Error('invalid-ai-response');
                         output.textContent = suggestion.message;
                         for (const candidate of suggestion.candidates) {
                             const button = document.createElement('button');
@@ -207,7 +208,11 @@ usingApiKey().then(apiKey => {
                         }
                     } catch (error) {
                         if (!row.isConnected) return;
-                        let message = 'AI suggestion failed. Try again or use Find / Add Series.';
+                        let message = error.status
+                            ? `AI request failed (HTTP ${error.status}). Check System → Logs at this time.`
+                            : 'AI request lost its connection or returned an invalid response. Check network access and System → Logs.';
+                        if ([502, 503, 504, 524].includes(error.status))
+                            message = `AI request failed (HTTP ${error.status}): the server or proxy did not return a usable response. A slow AI request may have exceeded the proxy timeout.`;
                         try { const body = await error.json(); if (body.error === 'InvalidKeyValue') message = body.result.value; } catch (_) {}
                         output.textContent = message;
                     } finally { aiPending = false; ai.disabled = false; }

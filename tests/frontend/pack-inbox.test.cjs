@@ -468,3 +468,15 @@ test('AI suggestions start directly but linking still requires confirmation', as
     assert.equal(state.calls[1].path, '/pack-inbox/match');
     assert.deepEqual(state.calls[1].data.issue_ids, [2]);
 });
+
+ test('AI proxy failures report HTTP status instead of a generic suggestion failure', async t => {
+    const { el } = await page(t, {
+        items: [{status: 'review', relative_path: 'Mystery.cbz', token: 'a', series_query: 'Mystery'}],
+        respond: async () => { throw {status: 524, json: async () => { throw new Error('HTML proxy error'); }}; }
+    });
+    el('.inbox-ai-suggest').click();
+    await tick();
+    assert.match(el('.inbox-ai-result').textContent, /HTTP 524/);
+    assert.match(el('.inbox-ai-result').textContent, /proxy timeout/);
+    assert.equal(el('.inbox-ai-suggest').disabled, false);
+ });

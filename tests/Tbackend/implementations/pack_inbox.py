@@ -269,7 +269,7 @@ class PackInbox(unittest.TestCase):
         self.assertEqual(sum(r['status']=='imported' for r in result['items']),2)
         self.assertEqual(self.db.execute('SELECT COUNT(*) FROM issues_files WHERE forced=1').fetchone()[0],2)
         for identifier, path in self.db.execute('SELECT i.volume_id,f.filepath FROM files f JOIN issues_files x ON f.id=x.file_id JOIN issues i ON i.id=x.issue_id'):
-            self.assertTrue(Path(path).is_relative_to(self.library / str(identifier)))
+            self.assertIn(self.library / str(identifier), Path(path).parents)
             source = a if identifier == 1 else b
             self.assertEqual(hashlib.sha256(Path(path).read_bytes()).digest(),hashlib.sha256(source.read_bytes()).digest())
         for path, (data,mtime) in original.items():
