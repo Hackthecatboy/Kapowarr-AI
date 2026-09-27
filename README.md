@@ -8,7 +8,7 @@
 >
 > Based on [Hackthecatboy/Kapowarr](https://github.com/Hackthecatboy/Kapowarr),
 > preserving its importing and file naming. Comicarr AI features are inventoried
-> but not implemented yet; see the [AI port plan](docs/ai-feature-inventory.md).
+> with provider settings and connection testing now available; see the [AI port plan](docs/ai-feature-inventory.md).
 > Development builds publish from `main` to `ghcr.io/hackthecatboy/kapowarr-ai:dev`. See the
 > [roadmap](ROADMAP.md), [fork plan](FORK_PLAN.md), and [Synology test setup](docs/synology-ghcr.md).
 > Please keep fork-specific issues in this repository rather than directing

@@ -1,6 +1,7 @@
 # Comicarr AI inventory and Kapowarr-AI port plan
 
-Inspected September 27, 2026. Inventory only: no AI functionality has been ported.
+Inspected September 27, 2026. Provider settings and connection testing are implemented in Kapowarr-AI;
+see [setup and validation](ai-provider.md). Other features below remain planned.
 Kapowarr-AI starts from Kapowarr commit `aca5d1a`, including the Pack Inbox,
 indexer/client integrations and native import naming.
 

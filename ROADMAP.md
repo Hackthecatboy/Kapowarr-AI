@@ -11,8 +11,11 @@ sections have been removed; behavior and setup belong in the linked guides.
 
 This local fork preserves Kapowarr importing and naming while adapting Comicarr AI
 features. See the [feature inventory and port order](docs/ai-feature-inventory.md).
-The inventory is complete. AI implementation is pending; dedicated image build
-and Synology configuration are prepared in [the setup guide](docs/synology-ghcr.md). Parent-fork validation and development items remain below.
+The inventory and [AI provider settings/test](docs/ai-provider.md) are implemented
+with local regression coverage; live provider validation and other AI features
+remain pending. Dedicated image builds and Synology configuration are documented
+in [the setup guide](docs/synology-ghcr.md). Parent-fork validation and development
+items remain below.
 
 ## Live validation still needed
 

@@ -635,6 +635,14 @@ def api_settings():
         return return_api(settings.get_public_settings().todict())
 
 
+@api.route('/ai/test', methods=['POST'])
+@error_handler
+@auth
+def api_ai_test():
+    from backend.features.ai_provider import test_connection
+    return return_api(test_connection(request.get_json(silent=True)))
+
+
 @api.route('/settings/api_key', methods=['POST'])
 @error_handler
 @auth

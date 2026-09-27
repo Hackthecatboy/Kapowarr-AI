@@ -73,6 +73,11 @@ class PublicSettingsValues:
     auth_username: str = ''
     auth_password: str = ''
 
+    ai_base_url: str = ''
+    ai_api_key: str = ''
+    ai_model: str = ''
+    ai_timeout: int = 30
+
     comicvine_api_key: str = ''
     api_key: str = ''
     flaresolverr_base_url: str = ''
@@ -154,7 +159,7 @@ class PublicSettingsValues:
             return result
 
         for k, v in result.items():
-            if k in ("auth_username", "auth_password", "proxy_password") and v:
+            if k in ("auth_username", "auth_password", "proxy_password", "ai_api_key") and v:
                 result[k] = Constants.CREDENTIAL_REPLACEMENT
 
             if isinstance(v, BaseEnum):
@@ -320,7 +325,10 @@ class Settings(metaclass=Singleton):
 
         self.clear_cache()
 
-        LOGGER.info(f'Settings changed: {formatted_data}')
+        logged_data = dict(formatted_data)
+        if 'ai_api_key' in logged_data:
+            logged_data['ai_api_key'] = Constants.CREDENTIAL_REPLACEMENT
+        LOGGER.info(f'Settings changed: {logged_data}')
 
         return
 
@@ -420,6 +428,13 @@ class Settings(metaclass=Singleton):
         if key == 'api_key' and from_public:
             # Request generation of new key instead of setting value
             raise InvalidSettingModification(key, 'POST /settings/api_key')
+
+        if key in ('ai_base_url', 'ai_api_key', 'ai_model', 'ai_timeout'):
+            from backend.features.ai_provider import validate_setting
+            converted = validate_setting(key, value)
+            if key == 'ai_api_key' and value == Constants.CREDENTIAL_REPLACEMENT:
+                return self.sv.ai_api_key
+            return converted
 
         key_data = KeyCollection.__dataclass_fields__[key]
 

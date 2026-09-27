@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}AI Provider Settings{% endblock %}
+{% block css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">{% endblock %}
+{% block js %}<script src="{{ url_for('static', filename='js/settings_ai.js') }}" defer></script>{% endblock %}
+{% block main %}
+<main><div class="settings-container">
+<form id="ai-settings-form">
+<h2>AI Provider</h2>
+<p>Configure an OpenAI-compatible endpoint. Test Connection sends a short prompt to the selected model and may use your provider's quota. No library content is sent.</p>
+<table class="fold-table">
+<tr><th><label for="ai-base-url">API base URL</label></th><td><input id="ai-base-url" type="url" placeholder="http://model-server:11434/v1"><p>Include the API prefix, such as /v1. The server must be reachable from the NAS container.</p></td></tr>
+<tr><th><label for="ai-api-key">API key</label></th><td><input id="ai-api-key" type="password" autocomplete="new-password"><p>A saved key is masked. Leave the mask unchanged to keep it, or clear the field for a keyless endpoint.</p></td></tr>
+<tr><th><label for="ai-model">Model</label></th><td><input id="ai-model" type="text" placeholder="Model identifier"></td></tr>
+<tr><th><label for="ai-timeout">Timeout (seconds)</label></th><td><input id="ai-timeout" type="number" min="5" max="120" value="30" required></td></tr>
+</table>
+<button id="ai-save" type="submit" disabled>Save</button>
+<button id="ai-test" type="button" disabled>Test Connection</button>
+<p id="ai-status" role="status" aria-live="polite"></p>
+<p>AI matching and other AI features are not enabled by saving these settings. Library importing and naming continue to use Kapowarr's existing rules.</p>
+</form></div></main>
+{% endblock %}

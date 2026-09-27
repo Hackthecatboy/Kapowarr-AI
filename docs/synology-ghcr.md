@@ -11,8 +11,9 @@ to `ghcr.io/hackthecatboy/kapowarr-ai:dev`, with a second `sha-FULL_COMMIT_ID` t
 for choosing a specific revision. Docker Hub is not used. Publishing an image
 does not update the running NAS container.
 
-The application still uses Kapowarr's import/naming behavior; AI features have
-not been ported yet. Use a new database and copied test comics, not the running
+The application still uses Kapowarr's import/naming behavior. AI provider settings
+and connection testing are available under Settings → AI Provider; other AI features
+remain planned. Use a new database and copied test comics, not the running
 Kapowarr project's database or library. The host port defaults to **5658** so the
 existing test service on 5657 can continue running.
 

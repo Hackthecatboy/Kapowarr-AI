@@ -1,0 +1,41 @@
+const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const { resolve } = require('node:path');
+const { test } = require('node:test');
+const { JSDOM } = require('jsdom');
+const root = resolve(__dirname, '../..');
+const tick = () => new Promise(resolve => setTimeout(resolve, 0));
+
+test('AI settings test drafts, prevent duplicate requests and recover from failure', async t => {
+    const html = readFileSync(resolve(root, 'frontend/templates/settings_ai.html'), 'utf8');
+    const dom = new JSDOM(html.replace(/\{%[\s\S]*?%\}/g, ''), { runScripts: 'outside-only' });
+    t.after(() => dom.window.close());
+    const w = dom.window;
+    const el = id => w.document.querySelector(id);
+    w.usingApiKey = async () => 'key';
+    w.fetchAPI = async () => ({ result: { ai_base_url: 'http://model/v1', ai_api_key: '', ai_model: 'fixture', ai_timeout: 30 } });
+    let finish;
+    const calls = [];
+    w.sendAPI = (...args) => { calls.push(args); return new Promise((resolve, reject) => { finish = reject; }); };
+    w.eval(readFileSync(resolve(root, 'frontend/static/js/settings_ai.js'), 'utf8'));
+    await tick();
+    el('#ai-model').value = 'draft-model';
+    el('#ai-test').click();
+    el('#ai-test').click();
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0][1], '/ai/test');
+    assert.equal(calls[0][4].ai_model, 'draft-model');
+    assert.equal(el('#ai-save').disabled, true);
+    finish(new Error('offline'));
+    await tick();
+    assert.equal(el('#ai-test').disabled, false);
+    assert.equal(el('#ai-model').value, 'draft-model');
+    assert.match(el('#ai-status').textContent, /Request failed/);
+    w.sendAPI = async (method, path, key, params, data) => {
+        assert.equal(method, 'PUT'); assert.equal(path, '/settings');
+        return { json: async () => ({ result: data }) };
+    };
+    el('#ai-save').click();
+    await tick();
+    assert.equal(el('#ai-status').textContent, 'Settings saved.');
+});
